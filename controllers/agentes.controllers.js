@@ -1,5 +1,7 @@
 // IMPORTAMOS LA CONEXIÓN A LA DB
 import { CONEXION } from "../initial/db.js";
+// IMPORTAMOS EL ENCRIPTADO
+import bcrypt from "bcrypt";
 // IMPORTAMOS LAS AYUDAS
 import {
   MENSAJE_DE_ERROR,
@@ -39,12 +41,20 @@ export const RegistrarAgente = async (req, res) => {
             `¡Oops! Parece que el agente ${ClaveInternaAgente.toUpperCase()} ya existe, por favor intente con otra clave de agente.`
           );
       } else {
+        // DEFINIMOS EL TAMAÑO DEL HASH
+        const TamañoHash = 10;
+        // GENERAMOS CONTRASEÑA ENCRIPTADA
+        const ContraseñaEncriptada = bcrypt.hashSync(
+          ContraseñaAgente,
+          TamañoHash
+        );
+
         const sql = `INSERT INTO agentes (ClaveInternaAgente, ContraseñaAgente, NombreAgente, ApellidosAgente, TipoPerfilAgente, FechaCreacionAgente, HoraCreacionAgente) VALUES (?,?,?,?,?, CURDATE(),'${ObtenerHoraActual()}')`;
         CONEXION.query(
           sql,
           [
             ClaveInternaAgente || "N/A",
-            ContraseñaAgente || "N/A",
+            ContraseñaEncriptada || "N/A",
             NombreAgente || "N/A",
             ApellidosAgente || "N/A",
             TipoPerfilAgente || "Agente",
@@ -143,35 +153,88 @@ export const ActualizarAgente = async (req, res) => {
 
   try {
     const sql = `SELECT * FROM agentes WHERE ClaveInternaAgente = ? AND idAgente != ?`;
-    CONEXION.query(sql, [ClaveInternaAgente, idAgente], (error, result) => {
-      if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
-      if (result.length > 0) {
-        res
-          .status(409)
-          .json(
-            `¡Oops! Parece que el agente ${ClaveInternaAgente.toUpperCase()} ya existe, por favor intente con otra clave de agente.`
-          );
-      } else {
-        const sql = `UPDATE agentes SET ClaveInternaAgente = ?, ContraseñaAgente = ?, NombreAgente = ?, ApellidosAgente = ?, TipoPerfilAgente = ? WHERE idAgente = ?`;
-        CONEXION.query(
-          sql,
-          [
+    CONEXION.query(
+      sql,
+      [ClaveInternaAgente, idAgente],
+      async (error, result) => {
+        if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
+        if (result.length > 0) {
+          res
+            .status(409)
+            .json(
+              `¡Oops! Parece que el agente ${ClaveInternaAgente.toUpperCase()} ya existe, por favor intente con otra clave de agente.`
+            );
+        } else {
+          await ValidarActualizacionDeContraseñaAgente(
+            idAgente,
             ClaveInternaAgente,
             ContraseñaAgente,
             NombreAgente,
             ApellidosAgente,
-            TipoPerfilAgente,
-            idAgente,
-          ],
-          (error, result) => {
-            if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
-            res.status(200).json(`¡El agente ha sido actualizada con éxito!`);
-          }
-        );
+            TipoPerfilAgente
+          );
+          res.status(200).json(`¡El agente ha sido actualizado con éxito!`);
+        }
       }
-    });
+    );
   } catch (error) {
     console.log(error);
     res.status(500).json(MENSAJE_DE_ERROR);
   }
+};
+const ValidarActualizacionDeContraseñaAgente = (
+  idAgente,
+  ClaveInternaAgente,
+  ContraseñaAgente,
+  NombreAgente,
+  ApellidosAgente,
+  TipoPerfilAgente
+) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT ContraseñaAgente FROM agentes WHERE idAgente = ?`;
+    CONEXION.query(sql, [idAgente], (error, result) => {
+      if (error) return reject(error);
+      if (ContraseñaAgente === result[0].ContraseñaAgente) {
+        const sqlContraseñaNoCambiada = `UPDATE agentes SET ClaveInternaAgente = ?, NombreAgente = ?, ApellidosAgente = ?, TipoPerfilAgente = ? WHERE idAgente = ?`;
+        CONEXION.query(
+          sqlContraseñaNoCambiada,
+          [
+            ClaveInternaAgente || "N/A",
+            NombreAgente || "N/A",
+            ApellidosAgente || "N/A",
+            TipoPerfilAgente || "Agente",
+            idAgente,
+          ],
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(true);
+          }
+        );
+      } else {
+        // DEFINIMOS EL TAMAÑO DEL HASH
+        const TamañoHash = 10;
+        // GENERAMOS CONTRASEÑA ENCRIPTADA
+        const ContraseñaEncriptada = bcrypt.hashSync(
+          ContraseñaAgente,
+          TamañoHash
+        );
+        const sql = `UPDATE agentes SET ClaveInternaAgente = ?, ContraseñaAgente = ?, NombreAgente = ?, ApellidosAgente = ?, TipoPerfilAgente = ? WHERE idAgente = ?`;
+        CONEXION.query(
+          sql,
+          [
+            ClaveInternaAgente || "N/A",
+            ContraseñaEncriptada || "N/A",
+            NombreAgente || "N/A",
+            ApellidosAgente || "N/A",
+            TipoPerfilAgente || "Agente",
+            idAgente,
+          ],
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(true);
+          }
+        );
+      }
+    });
+  });
 };

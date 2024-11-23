@@ -18,6 +18,8 @@ import gruasRoutes from "../routes/gruas.routes.js";
 import personasRoutes from "../routes/personas.routes.js";
 // IMPORTAMOS LAS RUTAS DE LOS CONCEPTOS
 import conceptosRoutes from "../routes/conceptos.routes.js";
+// IMPORTAMOS LAS RUTAS DE LOS DOCUMENTOS
+import documentosRoutes from "../routes/documentos.routes.js";
 
 // IMPORTAMOS LA CONFIGURACIÓN DE MULTER
 import { multerConfig } from "../middlewares/multer.js";
@@ -58,5 +60,6 @@ app.use("/api/agentes", agentesRoutes);
 app.use("/api/gruas", gruasRoutes);
 app.use("/api/personas", personasRoutes);
 app.use("/api/conceptos", conceptosRoutes);
+app.use("/api/documentos", documentosRoutes);
 
 export default app;

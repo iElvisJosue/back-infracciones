@@ -92,8 +92,8 @@ export const ObtenerPersonasPorFiltro = async (req, res) => {
   try {
     const sql =
       filtro === ""
-        ? `SELECT * FROM personas ORDER BY idPersona DESC`
-        : `SELECT * FROM personas WHERE NombrePersona LIKE ? OR CURPPersona LIKE ? OR RFCPersona LIKE ? ORDER BY idPersona DESC`;
+        ? `SELECT * FROM personas WHERE idPersona != 1 ORDER BY idPersona DESC`
+        : `SELECT * FROM personas WHERE (NombrePersona LIKE ? OR CURPPersona LIKE ? OR RFCPersona LIKE ?) AND idPersona != 1 ORDER BY idPersona DESC`;
     CONEXION.query(sql, PARAMETROS_SQL, (error, result) => {
       if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
       res.send(result);
@@ -214,9 +214,8 @@ export const ObtenerPersonasActivasPorFiltro = async (req, res) => {
   try {
     const sql =
       filtro === ""
-        ? `SELECT * FROM personas WHERE ActivaPersona = "Activa" ORDER BY NombrePersona = "A Quien Corresponda" DESC, idPersona DESC`
-        : `SELECT * FROM personas WHERE (NombrePersona LIKE ? OR CURPPersona LIKE ? OR RFCPersona LIKE ?) AND ActivaPersona = "Activa" ORDER BY idPersona DESC;
-`;
+        ? `SELECT * FROM personas WHERE ActivaPersona = "Activa" ORDER BY idPersona ASC`
+        : `SELECT * FROM personas WHERE (NombrePersona LIKE ? OR CURPPersona LIKE ? OR RFCPersona LIKE ?) AND ActivaPersona = "Activa" ORDER BY idPersona ASC`;
     CONEXION.query(sql, PARAMETROS_SQL, (error, result) => {
       if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
       res.send(result);

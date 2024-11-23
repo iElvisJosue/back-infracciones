@@ -41,7 +41,10 @@ export const RegistrarInfraccion = async (req, res) => {
     );
   }
   for (const infoConcepto of Concepto) {
-    await CrearUnionInfraccionConcepto(idInfraccion, infoConcepto.idConcepto);
+    await CrearUnionInfraccionConcepto(
+      idInfraccion,
+      infoConcepto.idListaConcepto
+    );
   }
 
   await CrearUnionInfraccionPersonaAgenteGrua(
@@ -51,6 +54,7 @@ export const RegistrarInfraccion = async (req, res) => {
     idGrua
   );
 
+  console.log("¡La infracción se ha guardado con éxito!");
   res.status(200).json({ idInfraccion });
 
   try {
@@ -134,10 +138,10 @@ const CrearUnionInfraccionDocumentoRetenido = (idInfraccion, idDocumento) => {
     });
   });
 };
-const CrearUnionInfraccionConcepto = (idInfraccion, idConcepto) => {
+const CrearUnionInfraccionConcepto = (idInfraccion, idListaConcepto) => {
   return new Promise((resolve, reject) => {
-    const sql = `INSERT INTO union_infraccion_concepto (idInfraccion, idConcepto) VALUES (?,?)`;
-    CONEXION.query(sql, [idInfraccion, idConcepto], (error, result) => {
+    const sql = `INSERT INTO union_infraccion_concepto (idInfraccion, idListaConcepto) VALUES (?,?)`;
+    CONEXION.query(sql, [idInfraccion, idListaConcepto], (error, result) => {
       if (error) return reject(error);
       resolve(true);
     });
@@ -329,10 +333,10 @@ export const BuscarConceptosDocumentosEvidencias = async (req, res) => {
 const BuscarConceptosPorInfraccion = async (idInfraccion) => {
   return new Promise((resolve, reject) => {
     const sql = `SELECT 
-                  c.* 
+                  lc.* 
                   FROM union_infraccion_concepto uic
                   LEFT JOIN 
-                  conceptos c ON uic.idConcepto = c.idConcepto
+                  listaconceptos lc ON uic.idListaConcepto = lc.idListaConcepto
                   WHERE uic.idInfraccion = ?`;
     CONEXION.query(sql, [idInfraccion], (error, result) => {
       if (error) return reject(error);

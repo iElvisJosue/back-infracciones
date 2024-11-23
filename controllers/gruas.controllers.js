@@ -67,8 +67,8 @@ export const ObtenerGruasPorFiltro = async (req, res) => {
   try {
     const sql =
       filtro === ""
-        ? `SELECT * FROM gruas ORDER BY idGrua DESC`
-        : `SELECT * FROM gruas WHERE NombreGrua LIKE ? ORDER BY NombreGrua DESC`;
+        ? `SELECT * FROM gruas WHERE idGrua != 1 ORDER BY idGrua DESC`
+        : `SELECT * FROM gruas WHERE NombreGrua LIKE ? AND idGrua != 1 ORDER BY NombreGrua DESC`;
     CONEXION.query(sql, [`%${filtro}%`], (error, result) => {
       if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
       res.send(result);
@@ -155,7 +155,7 @@ export const ObtenerGruasActivasPorFiltro = async (req, res) => {
   try {
     const sql =
       filtro === ""
-        ? `SELECT * FROM gruas WHERE ActivaGrua = "Si" ORDER BY NombreGrua = "SIN GRÚA" DESC, idGrua DESC`
+        ? `SELECT * FROM gruas WHERE ActivaGrua = "Si" ORDER BY idGrua ASC`
         : `SELECT * FROM gruas WHERE NombreGrua LIKE ? AND ActivaGrua = "Si" ORDER BY NombreGrua DESC`;
     CONEXION.query(sql, [`%${filtro}%`], (error, result) => {
       if (error) return res.status(400).json(MENSAJE_ERROR_CONSULTA_SQL);
